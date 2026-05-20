@@ -20,8 +20,7 @@ class AccessibilityHelperService : AccessibilityService() {
         serviceInfo = AccessibilityServiceInfo().apply {
             eventTypes = AccessibilityEvent.TYPES_ALL_MASK
             feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC
-            flags = AccessibilityServiceInfo.FLAG_DEFAULT or
-                    AccessibilityServiceInfo.FLAG_REQUEST_TOUCH_EXPLORATION_MODE
+            flags = AccessibilityServiceInfo.FLAG_REQUEST_TOUCH_EXPLORATION_MODE
             notificationTimeout = 100
         }
     }
@@ -65,7 +64,7 @@ class AccessibilityHelperService : AccessibilityService() {
                     AccessibilityNodeInfo.ACTION_SET_TEXT,
                     Bundle().apply {
                         putCharSequence(
-                            AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_ARGUMENT, text
+                            AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text
                         )
                     }
                 )
@@ -74,6 +73,13 @@ class AccessibilityHelperService : AccessibilityService() {
         return false
     }
 
-    fun scrollDown(): Boolean = performGlobalAction(GLOBAL_ACTION_SCROLL_FORWARD)
-    fun scrollUp(): Boolean = performGlobalAction(GLOBAL_ACTION_SCROLL_BACKWARD)
+    fun scrollDown(): Boolean {
+        val nodeInfo = rootInActiveWindow ?: return false
+        return nodeInfo.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
+    }
+
+    fun scrollUp(): Boolean {
+        val nodeInfo = rootInActiveWindow ?: return false
+        return nodeInfo.performAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD)
+    }
 }

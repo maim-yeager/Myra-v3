@@ -35,7 +35,13 @@ class MusicController(private val context: Context) {
     }
 
     fun playPause() {
-        mediaController?.transportControls?.playPause()
+        val controller = mediaController ?: return
+        val state = controller.playbackState?.state
+        if (state == PlaybackState.STATE_PLAYING) {
+            controller.transportControls.pause()
+        } else {
+            controller.transportControls.play()
+        }
     }
 
     fun play() {
