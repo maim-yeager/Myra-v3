@@ -3,6 +3,7 @@ package com.myra.assistant.ai
 import android.util.Base64
 import kotlinx.coroutines.*
 import okhttp3.*
+import org.json.JSONArray
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 

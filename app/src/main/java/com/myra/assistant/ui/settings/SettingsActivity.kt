@@ -2,6 +2,7 @@ package com.myra.assistant.ui.settings
 
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.provider.Settings
 import android.view.View
@@ -142,7 +143,7 @@ class SettingsActivity : AppCompatActivity() {
     private fun getPrimeContacts(): List<PrimeContact> {
         val json = prefs.getString("prime_contacts_json", "[]")
         return try {
-            val array = org.json.JSONArray(json)
+            val array = org.json.JSONArray(json ?: "[]")
             (0 until array.length()).map { i ->
                 val obj = array.getJSONObject(i)
                 PrimeContact(obj.getString("name"), obj.getString("number"))

@@ -3,6 +3,7 @@ package com.myra.assistant.ai
 import android.util.Base64
 import kotlinx.coroutines.*
 import okhttp3.*
+import org.json.JSONArray
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
@@ -172,18 +173,14 @@ class GeminiLiveClient(
 
             val outputTranscription = serverContent.optJSONObject("outputTranscription")
             if (outputTranscription != null) {
-                val text = outputTranscription.optString("text")
-                if (text.isNotEmpty()) {
-                    onInputTranscript?.invoke(text)
-                }
+                val t = outputTranscription.optString("text")
+                if (t.isNotEmpty()) onInputTranscript?.invoke(t)
             }
 
             val inputTranscription = serverContent.optJSONObject("inputTranscription")
             if (inputTranscription != null) {
-                val text = inputTranscription.optString("text")
-                if (text.isNotEmpty()) {
-                    onOutputTranscript?.invoke(text)
-                }
+                val t = inputTranscription.optString("text")
+                if (t.isNotEmpty()) onOutputTranscript?.invoke(t)
             }
 
             if (serverContent.optBoolean("turnComplete", false)) {
@@ -197,12 +194,8 @@ class GeminiLiveClient(
     private fun startSessionRenewTimer() {
         sessionRenewJob?.cancel()
         sessionRenewJob = scope.launch {
-            delay(540_000) // 9 minutes
-            if (isConnected) {
-                disconnect()
-                delay(3000)
-                connect()
-            }
+            delay(540_000)
+            if (isConnected) { disconnect(); delay(3000); connect() }
         }
     }
 
@@ -210,10 +203,8 @@ class GeminiLiveClient(
         keepAliveJob?.cancel()
         keepAliveJob = scope.launch {
             while (isConnected) {
-                delay(8000) // 8 seconds
-                if (isConnected) {
-                    sendAudio(emptyAudioChunk)
-                }
+                delay(8000)
+                if (isConnected) sendAudio(emptyAudioChunk)
             }
         }
     }

@@ -13,6 +13,7 @@ interface AIProvider {
     fun disconnect()
     fun sendText(text: String)
     fun sendAudio(audioData: ByteArray)
+    fun sendAudioCommit() {}
     fun interrupt()
     fun isConnected(): Boolean
 }

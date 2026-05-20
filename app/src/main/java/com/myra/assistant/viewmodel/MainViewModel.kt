@@ -1,19 +1,17 @@
 package com.myra.assistant.viewmodel
 
-import android.app.ActivityManager
+import android.bluetooth.BluetoothAdapter
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.hardware.camera.CameraManager
+import android.hardware.camera2.CameraManager
 import android.net.Uri
 import android.net.wifi.WifiManager
-import android.os.BluetoothAdapter
 import android.os.BatteryManager
 import android.os.Build
 import android.provider.ContactsContract
 import android.telecom.TelecomManager
-import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myra.assistant.ai.CommandParser
@@ -64,9 +62,7 @@ class MainViewModel(private val context: Context) : ViewModel() {
         "linkedin" to "com.linkedin.android"
     )
 
-    fun parseCommand(text: String): AppCommand? {
-        return commandParser.parse(text)
-    }
+    fun parseCommand(text: String): AppCommand? = commandParser.parse(text)
 
     fun executeCommand(command: AppCommand) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -100,39 +96,30 @@ class MainViewModel(private val context: Context) : ViewModel() {
 
     private suspend fun openApp(appName: String) {
         withContext(Dispatchers.IO) {
-            val packageName = appPackageMap[appName.lowercase()]
-                ?: findAppByName(appName)
-
+            val packageName = appPackageMap[appName.lowercase()] ?: findAppByName(appName)
             if (packageName != null) {
                 val intent = context.packageManager.getLaunchIntentForPackage(packageName)
                 if (intent != null) {
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     context.startActivity(intent)
                     commandResult.postValue("Opened $appName")
-                } else {
-                    commandResult.postValue("Cannot open $appName")
-                }
-            } else {
-                commandResult.postValue("App not found: $appName")
-            }
+                } else commandResult.postValue("Cannot open $appName")
+            } else commandResult.postValue("App not found: $appName")
         }
     }
 
     private fun findAppByName(name: String): String? {
         val pm = context.packageManager
-        val packages = pm.getInstalledApplications(PackageManager.GET_META_DATA)
-        return packages.find {
-            it.loadLabel(pm).toString().lowercase().contains(name.lowercase())
-        }?.packageName
+        return pm.getInstalledApplications(PackageManager.GET_META_DATA)
+            .find { it.loadLabel(pm).toString().lowercase().contains(name.lowercase()) }
+            ?.packageName
     }
 
     private fun closeApp() {
         if (AccessibilityHelperService.isEnabled()) {
             AccessibilityHelperService.instance?.closeCurrentApp()
             commandResult.postValue("App closed")
-        } else {
-            commandResult.postValue("Enable accessibility service to close apps")
-        }
+        } else commandResult.postValue("Enable accessibility service to close apps")
     }
 
     private suspend fun callContact(name: String) {
@@ -149,9 +136,7 @@ class MainViewModel(private val context: Context) : ViewModel() {
                 } catch (e: Exception) {
                     commandResult.postValue("Cannot make call")
                 }
-            } else {
-                commandResult.postValue("Contact not found: $name")
-            }
+            } else commandResult.postValue("Contact not found: $name")
         }
     }
 
@@ -159,24 +144,13 @@ class MainViewModel(private val context: Context) : ViewModel() {
         val projection = arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER)
         val selection = "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} LIKE ?"
         val selectionArgs = arrayOf("%$name%")
-
-        try {
+        return try {
             val cursor = context.contentResolver.query(
                 ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                projection,
-                selection,
-                selectionArgs,
-                null
+                projection, selection, selectionArgs, null
             )
-            cursor?.use {
-                if (it.moveToFirst()) {
-                    return it.getString(0)
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        return null
+            cursor?.use { if (it.moveToFirst()) it.getString(0) else null }
+        } catch (e: Exception) { null }
     }
 
     private suspend fun sendSms(name: String, message: String) {
@@ -190,81 +164,59 @@ class MainViewModel(private val context: Context) : ViewModel() {
                 }
                 context.startActivity(intent)
                 commandResult.postValue("SMS to $name")
-            } else {
-                commandResult.postValue("Contact not found: $name")
-            }
+            } else commandResult.postValue("Contact not found: $name")
         }
     }
 
     private fun openWhatsApp(number: String, message: String) {
         try {
             val encodedMessage = java.net.URLEncoder.encode(message, "UTF-8")
-            val uri = if (number.startsWith("+")) {
-                Uri.parse("https://wa.me/${number.substring(1)}?text=$encodedMessage")
-            } else {
-                Uri.parse("https://wa.me/$number?text=$encodedMessage")
-            }
-            val intent = Intent(Intent.ACTION_VIEW, uri).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
+            val clean = if (number.startsWith("+")) number.substring(1) else number
+            val uri = Uri.parse("https://wa.me/$clean?text=$encodedMessage")
+            val intent = Intent(Intent.ACTION_VIEW, uri).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
             context.startActivity(intent)
             commandResult.postValue("Opening WhatsApp")
-        } catch (e: Exception) {
-            commandResult.postValue("Cannot open WhatsApp")
-        }
+        } catch (e: Exception) { commandResult.postValue("Cannot open WhatsApp") }
     }
 
     private fun callPrimeContact(index: Int) {
         val prefs = context.getSharedPreferences("myra_prefs", Context.MODE_PRIVATE)
-        val contactsJson = prefs.getString("prime_contacts_json", "[]")
         try {
-            val contacts = org.json.JSONArray(contactsJson)
+            val contacts = org.json.JSONArray(prefs.getString("prime_contacts_json", "[]"))
             if (index < contacts.length()) {
                 val contact = contacts.getJSONObject(index)
-                val number = contact.getString("number")
                 val intent = Intent(Intent.ACTION_CALL).apply {
-                    data = Uri.parse("tel:$number")
+                    data = Uri.parse("tel:${contact.getString("number")}")
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
                 context.startActivity(intent)
                 commandResult.postValue("Calling ${contact.getString("name")}")
-            } else {
-                commandResult.postValue("Prime contact not found")
-            }
-        } catch (e: Exception) {
-            commandResult.postValue("No prime contacts set")
-        }
+            } else commandResult.postValue("Prime contact not found")
+        } catch (e: Exception) { commandResult.postValue("No prime contacts set") }
     }
 
     private fun sendSmsToPrime(index: Int, message: String) {
         val prefs = context.getSharedPreferences("myra_prefs", Context.MODE_PRIVATE)
-        val contactsJson = prefs.getString("prime_contacts_json", "[]")
         try {
-            val contacts = org.json.JSONArray(contactsJson)
+            val contacts = org.json.JSONArray(prefs.getString("prime_contacts_json", "[]"))
             if (index < contacts.length()) {
                 val contact = contacts.getJSONObject(index)
-                val number = contact.getString("number")
                 val intent = Intent(Intent.ACTION_VIEW).apply {
-                    data = Uri.parse("smsto:$number")
+                    data = Uri.parse("smsto:${contact.getString("number")}")
                     putExtra("sms_body", message)
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
                 context.startActivity(intent)
                 commandResult.postValue("SMS to ${contact.getString("name")}")
-            } else {
-                commandResult.postValue("Prime contact not found")
-            }
-        } catch (e: Exception) {
-            commandResult.postValue("No prime contacts set")
-        }
+            } else commandResult.postValue("Prime contact not found")
+        } catch (e: Exception) { commandResult.postValue("No prime contacts set") }
     }
 
     private fun adjustVolume(delta: Int) {
         val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager
         val current = audioManager.getStreamVolume(android.media.AudioManager.STREAM_MUSIC)
         val max = audioManager.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC)
-        val newVolume = (current + delta).coerceIn(0, max)
-        audioManager.setStreamVolume(android.media.AudioManager.STREAM_MUSIC, newVolume, 0)
+        audioManager.setStreamVolume(android.media.AudioManager.STREAM_MUSIC, (current + delta).coerceIn(0, max), 0)
         commandResult.postValue("Volume ${if (delta > 0) "increased" else "decreased"}")
     }
 
@@ -276,100 +228,80 @@ class MainViewModel(private val context: Context) : ViewModel() {
                 cameraManager.setTorchMode(cameraId, on)
                 commandResult.postValue("Flashlight ${if (on) "on" else "off"}")
             }
-        } catch (e: Exception) {
-            commandResult.postValue("Cannot control flashlight")
-        }
+        } catch (e: Exception) { commandResult.postValue("Cannot control flashlight") }
     }
 
     private fun toggleWifi(on: Boolean) {
         try {
             val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+            @Suppress("DEPRECATION")
             wifiManager.isWifiEnabled = on
             commandResult.postValue("WiFi ${if (on) "enabled" else "disabled"}")
-        } catch (e: Exception) {
-            commandResult.postValue("Cannot control WiFi")
-        }
+        } catch (e: Exception) { commandResult.postValue("Cannot control WiFi") }
     }
 
     private fun toggleBluetooth(on: Boolean) {
         try {
             val adapter = BluetoothAdapter.getDefaultAdapter()
             if (adapter != null) {
-                adapter.enable() // Note: This requires BLUETOOTH_ADMIN permission
+                if (on) @Suppress("DEPRECATION") adapter.enable()
+                else @Suppress("DEPRECATION") adapter.disable()
                 commandResult.postValue("Bluetooth ${if (on) "enabled" else "disabled"}")
             }
-        } catch (e: Exception) {
-            commandResult.postValue("Cannot control Bluetooth")
-        }
+        } catch (e: Exception) { commandResult.postValue("Cannot control Bluetooth") }
     }
 
     private fun checkBattery() {
         val batteryManager = context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
         val level = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
-        val status = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            val isCharging = batteryManager.isCharging
-            if (isCharging) " and charging" else ""
-        } else ""
-
-        commandResult.postValue("Battery level: $level%$status")
+        val isCharging = batteryManager.isCharging
+        commandResult.postValue("Battery level: $level%${if (isCharging) " and charging" else ""}")
     }
 
     private fun getTime() {
-        val timeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
-        val time = timeFormat.format(Date())
-        commandResult.postValue("Current time is $time")
+        commandResult.postValue("Current time is ${SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date())}")
     }
 
     private fun getDate() {
-        val dateFormat = SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.getDefault())
-        val date = dateFormat.format(Date())
-        commandResult.postValue("Today's date is $date")
+        commandResult.postValue("Today's date is ${SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.getDefault()).format(Date())}")
     }
 
     private fun goHome() {
         if (AccessibilityHelperService.isEnabled()) {
             AccessibilityHelperService.instance?.performGlobalAction(android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_HOME)
             commandResult.postValue("Going to home screen")
-        } else {
-            commandResult.postValue("Enable accessibility service for this action")
-        }
+        } else commandResult.postValue("Enable accessibility service for this action")
     }
 
     private fun goBack() {
         if (AccessibilityHelperService.isEnabled()) {
             AccessibilityHelperService.instance?.performGlobalAction(android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_BACK)
             commandResult.postValue("Pressed back")
-        } else {
-            commandResult.postValue("Enable accessibility service for this action")
-        }
+        } else commandResult.postValue("Enable accessibility service for this action")
     }
 
     private fun takeScreenshot() {
         if (AccessibilityHelperService.isEnabled()) {
             AccessibilityHelperService.instance?.performGlobalAction(android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_TAKE_SCREENSHOT)
             commandResult.postValue("Screenshot taken")
-        } else {
-            commandResult.postValue("Enable accessibility service for screenshots")
-        }
+        } else commandResult.postValue("Enable accessibility service for screenshots")
     }
 
     fun acceptCall() {
         try {
             val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
+            @Suppress("DEPRECATION")
             telecomManager.acceptRingingCall()
             commandResult.postValue("Call accepted")
-        } catch (e: Exception) {
-            commandResult.postValue("Cannot accept call")
-        }
+        } catch (e: Exception) { commandResult.postValue("Cannot accept call") }
     }
 
     fun rejectCall() {
         try {
             val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
+            @Suppress("DEPRECATION")
             telecomManager.endCall()
             commandResult.postValue("Call rejected")
-        } catch (e: Exception) {
-            commandResult.postValue("Cannot reject call")
-        }
+        } catch (e: Exception) { commandResult.postValue("Cannot reject call") }
     }
 }
