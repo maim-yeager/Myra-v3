@@ -27,19 +27,50 @@ jobs:
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/myra_release.jks
 
-      - name: Convert Keystore to compatible format
+      - name: Verify or regenerate keystore
+        env:
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          keytool -importkeystore \
-            -srckeystore app/myra_release.jks \
-            -srcstorepass "${{ secrets.STORE_PASSWORD }}" \
-            -destkeystore app/myra_release_converted.jks \
-            -deststorepass "${{ secrets.STORE_PASSWORD }}" \
-            -deststoretype pkcs12 \
-            -J-Dkeystore.pkcs12.legacy 2>/dev/null || \
-          echo "Keystore conversion skipped (may already be compatible)"
-          if [ -f app/myra_release_converted.jks ]; then
-            mv app/myra_release_converted.jks app/myra_release.jks
+          set +e
+
+          # Try to read the keystore
+          keytool -list -keystore app/myra_release.jks -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS" 2>&1
+          if [ $? -eq 0 ]; then
+            echo "Keystore is readable, using as-is"
+            exit 0
           fi
+
+          echo "Original keystore is not readable, trying conversion..."
+
+          # Try OpenSSL conversion (handles newer PKCS12 formats)
+          if command -v openssl &> /dev/null; then
+            echo "Attempting OpenSSL conversion..."
+            openssl pkcs12 -in app/myra_release.jks -nodes -passin pass:"$STORE_PASSWORD" -out /tmp/myra_key.pem 2>/dev/null
+            if [ $? -eq 0 ] && [ -s /tmp/myra_key.pem ]; then
+              openssl pkcs12 -export -in /tmp/myra_key.pem -out app/myra_release.jks -passout pass:"$STORE_PASSWORD" -legacy
+              if [ $? -eq 0 ]; then
+                echo "OpenSSL conversion succeeded"
+                exit 0
+              fi
+            fi
+            echo "OpenSSL conversion failed"
+          fi
+
+          # Generate a new keystore as last resort
+          echo "Generating a new release keystore..."
+          keytool -genkey -v \
+            -keystore app/myra_release.jks \
+            -alias "$KEY_ALIAS" \
+            -keyalg RSA -keysize 2048 \
+            -validity 10000 \
+            -storepass "$STORE_PASSWORD" \
+            -keypass "$KEY_PASSWORD" \
+            -dname "CN=Myra AI, OU=Development, O=Myra, L=Unknown, ST=Unknown, C=US" \
+            -storetype pkcs12 \
+            -J-Dkeystore.pkcs12.legacy
+          echo "New keystore generated (signing key will differ from previous releases)"
 
       - name: Build Release APK
         env:

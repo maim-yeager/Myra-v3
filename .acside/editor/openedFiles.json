@@ -1,0 +1,215 @@
+{
+  "allFiles": [
+    {
+      "file": "/storage/emulated/0/Download/myra_ai/.cg/gradle-sync/sync.lock",
+      "selection": {
+        "end": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        },
+        "start": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        }
+      }
+    },
+    {
+      "file": "/storage/emulated/0/Download/myra_ai/.cg/gradle-sync/sync.pb",
+      "selection": {
+        "end": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        },
+        "start": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        }
+      }
+    },
+    {
+      "file": "/storage/emulated/0/Download/myra_ai/.github/workflows/build.yml",
+      "selection": {
+        "end": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        },
+        "start": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        }
+      }
+    },
+    {
+      "file": "/storage/emulated/0/Download/myra_ai/app/src/main/java/com/myra/assistant/ai/AIProvider.kt",
+      "selection": {
+        "end": {
+          "column": 30,
+          "index": 535,
+          "line": 17
+        },
+        "start": {
+          "column": 30,
+          "index": 535,
+          "line": 17
+        }
+      }
+    },
+    {
+      "file": "/storage/emulated/0/Download/myra_ai/app/src/main/java/com/myra/assistant/ai/GeminiLiveClient.kt",
+      "selection": {
+        "end": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        },
+        "start": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        }
+      }
+    },
+    {
+      "file": "/storage/emulated/0/Download/myra_ai/app/src/main/java/com/myra/assistant/ai/OpenAILiveClient.kt",
+      "selection": {
+        "end": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        },
+        "start": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        }
+      }
+    },
+    {
+      "file": "/storage/emulated/0/Download/myra_ai/app/src/main/java/com/myra/assistant/ai/CommandParser.kt",
+      "selection": {
+        "end": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        },
+        "start": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        }
+      }
+    },
+    {
+      "file": "/storage/emulated/0/Download/myra_ai/app/src/main/java/com/myra/assistant/database/AppDatabase.kt",
+      "selection": {
+        "end": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        },
+        "start": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        }
+      }
+    },
+    {
+      "file": "/storage/emulated/0/Download/myra_ai/app/src/main/java/com/myra/assistant/database/Expense.kt",
+      "selection": {
+        "end": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        },
+        "start": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        }
+      }
+    },
+    {
+      "file": "/storage/emulated/0/Download/myra_ai/app/src/main/java/com/myra/assistant/database/MacroDao.kt",
+      "selection": {
+        "end": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        },
+        "start": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        }
+      }
+    },
+    {
+      "file": "/storage/emulated/0/Download/myra_ai/app/src/main/java/com/myra/assistant/model/AppCommand.kt",
+      "selection": {
+        "end": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        },
+        "start": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        }
+      }
+    },
+    {
+      "file": "/storage/emulated/0/Download/myra_ai/app/src/main/java/com/myra/assistant/model/ChatMessage.kt",
+      "selection": {
+        "end": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        },
+        "start": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        }
+      }
+    },
+    {
+      "file": "/storage/emulated/0/Download/myra_ai/app/src/main/java/com/myra/assistant/model/PrimeContact.kt",
+      "selection": {
+        "end": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        },
+        "start": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        }
+      }
+    },
+    {
+      "file": "/storage/emulated/0/Download/myra_ai/app/src/main/java/com/myra/assistant/ui/main/ChatAdapter.kt",
+      "selection": {
+        "end": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        },
+        "start": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        }
+      }
+    }
+  ],
+  "selectedFile": "/storage/emulated/0/Download/myra_ai/app/src/main/java/com/myra/assistant/ui/main/ChatAdapter.kt"
+}
