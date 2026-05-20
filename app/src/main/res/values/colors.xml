@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="background">#050505</color>
+    <color name="primary_accent">#FF1744</color>
+    <color name="secondary">#D500F9</color>
+    <color name="card_background">#111111</color>
+    <color name="primary_card">#1A0000</color>
+    <color name="text_primary">#EEEEEE</color>
+    <color name="text_hint">#555555</color>
+    <color name="success">#00E676</color>
+    <color name="offline_mode">#2196F3</color>
+    <color name="red_overlay">#FF1744</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="transparent">#00000000</color>
+    <color name="orb_idle_start">#B71C1C</color>
+    <color name="orb_idle_end">#880E4F</color>
+    <color name="orb_active_start">#FF1744</color>
+    <color name="orb_active_end">#D500F9</color>
+    <color name="orb_speaking_start">#E040FB</color>
+    <color name="orb_thinking_start">#40C4FF</color>
+    <color name="orb_offline">#2196F3</color>
+</resources>
