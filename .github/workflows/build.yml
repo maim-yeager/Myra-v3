@@ -13,10 +13,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
           cache: gradle
 
@@ -27,13 +27,27 @@ jobs:
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/myra_release.jks
 
-      - name: Build Release APK
+      - name: Convert Keystore to compatible format
         run: |
-          ./gradlew assembleRelease \
-            -Pandroid.injected.signing.store.file=$GITHUB_WORKSPACE/app/myra_release.jks \
-            -Pandroid.injected.signing.store.password=${{ secrets.STORE_PASSWORD }} \
-            -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} \
-            -Pandroid.injected.signing.key.password=${{ secrets.KEY_PASSWORD }}
+          keytool -importkeystore \
+            -srckeystore app/myra_release.jks \
+            -srcstorepass "${{ secrets.STORE_PASSWORD }}" \
+            -destkeystore app/myra_release_converted.jks \
+            -deststorepass "${{ secrets.STORE_PASSWORD }}" \
+            -deststoretype pkcs12 \
+            -J-Dkeystore.pkcs12.legacy 2>/dev/null || \
+          echo "Keystore conversion skipped (may already be compatible)"
+          if [ -f app/myra_release_converted.jks ]; then
+            mv app/myra_release_converted.jks app/myra_release.jks
+          fi
+
+      - name: Build Release APK
+        env:
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          ./gradlew assembleRelease
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

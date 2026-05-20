@@ -16,8 +16,21 @@ android {
         versionName "2.0.0"
     }
 
+    signingConfigs {
+        release {
+            storeFile file("myra_release.jks")
+            storePassword System.getenv("STORE_PASSWORD") ?: ""
+            keyAlias System.getenv("KEY_ALIAS") ?: ""
+            keyPassword System.getenv("KEY_PASSWORD") ?: ""
+            storeType "PKCS12"
+            enableV1Signing true
+            enableV2Signing true
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
